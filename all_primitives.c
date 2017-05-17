@@ -4,61 +4,54 @@
 
 #include "rtv1.h"
 
-int	ft_shadow(t_main *main, double red, double green, double blue)
+int	ft_intersect(t_main *main, t_vec dir)
 {
-	int		final;
-	int		i;
-	int 	j;
-	double	len;
-	t_vec	light;
+	int i;
 
-	i = 0;
-	final = 0;
-	while (i < main->num)
-	{
-		main->ray[i].p = ft_add(main->ray[i].p, ft_mult(main->ray[i].n, 0.0001));
-		main->ray[i].l = ft_diff(main->light[i].l_position, main->ray[i].p);
-		main->ray[i].l = ft_normalize(main->ray[i].l);
-		ft_intersect_sph(main, main->ray[i].l, main->ray[i].p);
-		ft_plane_intersect(main, main->ray[i].l, main->ray[i].p);
-		ft_cyl_intersect(main, main->ray[i].l, main->ray[i].p);
-		ft_cone_intersect(main, main->ray[i].l, main->ray[i].p);
-		light = ft_diff(main->light[i].l_position, main->ray[i].p);
-		len = sqrt(ft_dot_prod(light, light));
-		j = 0;
-		while (j < 3)
-		{
-			if (main->inter.t[j] != 0 && main->inter.t[j] < len)
-			{
-				red *= 0.8;
-				green *= 0.8;
-				blue *= 0.8;
-				break;
-			}
-			j++;
-		}
-		final = ((int)fmin(255, red) << 16) + ((int)fmin(255, green) << 8) +
-				 										((int)fmin(255, blue));
-		i++;
-	}
-	return (final);
+	i = main->index;
+	if (main->type == 0 && main->sph[i].inter.disc >= 0)
+		ft_light_sph(main, dir);
+	else if (main->type == 1)
+		ft_light_plane(main, dir);
+	else if (main->type == 2 && main->cyl[i].inter.disc >= 0)
+		ft_light_cyl(main, dir);
+	else if (main->type == 3 && main->cone[i].inter.disc >= 0)
+		ft_light_cone(main, dir);
+	return (main->type);
 }
 
-void ft_param_obj(t_main *main)
+void	ft_for_each_obj(t_main *main, t_vec dir, t_vec pos)
 {
-	main->sph.center_sph = ft_vec(0, 0, -10);
-	main->sph.radius = 5;
-	main->sph.col = ft_vec(255, 0, 0);
-	main->plane.point = ft_vec(0, -1, -16);
-	main->plane.n = ft_normalize(ft_vec(0, 0, 1));
-	main->plane.col = ft_vec(255, 255, 0);
-	main->cyl.radius = 2.0;
-	main->cyl.center_cyl = ft_vec(10, 0, -10);
-	main->cyl.dir = ft_normalize(ft_vec(0, 1, 0));
-	main->cyl.col = ft_vec(0, 255, 0);
-	main->cone.center_cone = ft_vec(10, 0, -5);
-	main->cone.dir = ft_normalize(ft_vec(0, 1, 0));
-	main->cone.col = ft_vec(0, 0, 255);
+	int i;
+
+	i = -1;
+	while (++i < main->mem.sph && main->flag.sph == 0)
+		ft_intersect_sph(main, dir, pos, i);
+	i = -1;
+	while (++i < main->mem.plane && main->flag.plane == 0)
+		ft_plane_intersect(main, dir, pos, i);
+	i = -1;
+	while (++i < main->mem.cyl && main->flag.cyl == 0)
+		ft_cyl_intersect(main, dir, pos, i);
+	i = -1;
+	while (++i < main->mem.cone && main->flag.cone == 0)
+		ft_cone_intersect(main, dir, pos, i);
+}
+
+int	ft_type_and_color(t_main *main, t_vec dir)
+{
+	int color;
+
+	color = 0;
+	if (ft_intersect(main, dir) == 0 && main->flag.sph == 0)
+		color = ft_color(main, main->sph[main->index].col);
+	else if (ft_intersect(main, dir) == 1 && main->flag.plane == 0)
+		color = ft_color(main, main->plane[main->index].col);
+	else if (ft_intersect(main, dir) == 2 && main->flag.cyl == 0)
+		color = ft_color(main, main->cyl[main->index].col);
+	else if (ft_intersect(main, dir) == 3 && main->flag.cone == 0)
+		color = ft_color(main, main->cone[main->index].col);
+	return (color);
 }
 
 void	ft_tracing(t_main *main)
@@ -67,8 +60,7 @@ void	ft_tracing(t_main *main)
 	t_vec	dir;
 	int 	x;
 	int 	y;
-	int 	i;
-	int 	index;
+	int		color;
 
 	y = -1;
 	while (++y < HEIGHT)
@@ -76,54 +68,43 @@ void	ft_tracing(t_main *main)
 		x = -1;
 		while (++x < WIDTH)
 		{
-			index = -1;
 			pix.x = (2 * ((x + 0.5) / WIDTH) - 1) * A_RATIO * tan(FOV / 2);
 			pix.y = (1 - 2 * ((y + 0.5) / HEIGHT)) * tan(FOV / 2);
 			pix.z = main->cam.c_position.z - 1;
 			dir = ft_normalize(ft_diff(pix, main->cam.c_position));
-			ft_intersect_sph(main, dir, main->cam.c_position);
-			ft_plane_intersect(main, dir, main->cam.c_position);
-			ft_cyl_intersect(main, dir, main->cam.c_position);
-			ft_cone_intersect(main, dir, main->cam.c_position);
-			main->tmp = fmax(fmax(main->inter.t[0], main->inter.t[1]), fmax(main->inter.t[2], main->inter.t[3]));
-			i = 0;
-			while (i < 3)
-			{
-				if (main->inter.t[i] <= main->tmp && main->inter.t[i] != 0)
-				{
-					main->tmp = main->inter.t[i];
-					index = i;
-				}
-				i++;
-			}
-			if (index == 0 && main->inter.disc[0] >= 0)
-			{
-				ft_light_sph(main, dir);
-				mlx_pixel_put(main->win.mlx, main->win.win, x, y, ft_color(main, main->sph.col));
-			}
-			else if (index == 1)
-			{
-				ft_light_plane(main, dir);
-				mlx_pixel_put(main->win.mlx, main->win.win, x, y, ft_color(main, main->plane.col));
-			}
-			else if (index == 2 && main->inter.disc[2] >= 0)
-			{
-				ft_light_cyl(main, dir);
-				mlx_pixel_put(main->win.mlx, main->win.win, x, y, ft_color(main, main->cyl.col));
-			}
-			else if (index == 3 && main->inter.disc[3] >= 0)
-			{
-				ft_light_cone(main, dir);
-				mlx_pixel_put(main->win.mlx, main->win.win, x, y, ft_color(main, main->cone.col));
-			}
+//			ft_mat(main);
+			dir = ft_m_mult_vec(main, dir);
+			ft_for_each_obj(main, dir, main->cam_tmp);
+			ft_compare_all(main);
+			color = ft_type_and_color(main, dir);
+			mlx_pixel_put(main->win.mlx, main->win.win, x, y, color);
 		}
 	}
 }
 
 void	ft_scene(t_main *main)
 {
-	ft_param_obj(main);
+	main->mem.sph = 2;
+	main->mem.plane = 2;
+	main->mem.cyl = 1;
+	main->mem.cone = 0;
+	main->flag.color = 0;
+	ft_mat(main);
+	main->cam_tmp = ft_m_mult_vec(main, main->cam_tmp);
+	main->sph = (t_sphere *) malloc(sizeof(t_sphere) * main->mem.sph);
+	main->plane = (t_plane*)malloc(sizeof(t_plane) * main->mem.plane);
+	main->cyl = (t_cylinder*)malloc(sizeof(t_cylinder) * main->mem.cyl);
+	main->cone = (t_cone*)malloc(sizeof(t_cone) * main->mem.cone);
+	ft_check(main);
+	if (main->flag.sph == 0)
+		ft_param_sph(main);
+	if (main->flag.plane == 0)
+		ft_param_plane(main);
+	if (main->flag.cyl == 0)
+		ft_param_cyl(main);
+	if (main->flag.cone == 0)
+		ft_param_cone(main);
 	ft_tracing(main);
-	mlx_key_hook(main->win.win, ft_press_key, &main->win);
+	mlx_key_hook(main->win.win, ft_press_key, &main);
 	mlx_loop(main->win.mlx);
 }

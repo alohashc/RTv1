@@ -10,9 +10,13 @@ void	ft_scene_param(t_main *main, int num)
 	main->light = (t_light*)malloc(sizeof(t_light) * num);
 	main->ray = (t_ray*)malloc(sizeof(t_ray) * num);
 	main->cam.c_position = ft_vec(0, 0, 50);
-	main->light[0].l_position = ft_vec(10, 5, 0);
+	main->angle = 0;
+	main->cam_tmp = main->cam.c_position;
+//	ft_mat(main);
+//	main->cam_tmp = ft_m_mult_vec(main, main->cam_tmp);
+	main->light[0].l_position = ft_vec(20, 20, 0);
 	main->light[0].l_color = ft_vec(100, 100, 100);
-	main->light[1].l_position = ft_vec(-10, 5, 0);
+	main->light[1].l_position = ft_vec(-20, 5, 0);
 	main->light[1].l_color = ft_vec(100, 100, 100);
 }
 
@@ -22,8 +26,8 @@ void	ft_cmp(char *av, t_win *win)
 		win->win = mlx_new_window(win->mlx, WIDTH, HEIGHT, "Sphere");
 	else if (ft_strcmp(av, "Plane") == 0)
 		win->win = mlx_new_window(win->mlx, WIDTH, HEIGHT, "Plane");
-	else if (ft_strcmp(av, "Cyl") == 0)
-		win->win = mlx_new_window(win->mlx, WIDTH, HEIGHT, "Cyl");
+	else if (ft_strcmp(av, "Cylinder") == 0)
+		win->win = mlx_new_window(win->mlx, WIDTH, HEIGHT, "Cylinder");
 	else if (ft_strcmp(av, "Cone") == 0)
 		win->win = mlx_new_window(win->mlx, WIDTH, HEIGHT, "Cone");
 	else if (ft_strcmp(av, "Scene") == 0)

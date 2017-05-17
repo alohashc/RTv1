@@ -6,7 +6,7 @@
 #    By: alohashc <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2017/03/06 10:48:43 by alohashc          #+#    #+#              #
-#    Updated: 2017/05/10 16:50:36 by alohashc         ###   ########.fr        #
+#    Updated: 2017/05/14 20:05:16 by alohashc         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,11 +14,16 @@ NAME = RTv1
 
 SRC = ./main.c \
 	  ./sphere.c \
-	  ./vectors.c \
+	  ./vectors1.c \
+	  ./vectors2.c \
 	  ./plane.c \
 	  ./cylinder.c \
 	  ./cone.c \
-	  ./all_primitives.c
+	  ./all_primitives.c \
+	  ./color.c \
+	  ./events.c \
+	  ./compare_t.c \
+	  ./param_obj.c
 
 O_FILE = $(SRC:.c=.o)
 
