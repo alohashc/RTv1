@@ -1,21 +1,26 @@
-//
-// Created by Andrii Lohashchuk on 4/26/17.
-//
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   all_primitives.c                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: alohashc <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2017/05/21 16:05:34 by alohashc          #+#    #+#             */
+/*   Updated: 2017/05/21 16:05:46 by alohashc         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "rtv1.h"
 
-int	ft_intersect(t_main *main, t_vec dir)
+int		ft_intersect(t_main *main, t_vec dir)
 {
-	int i;
-
-	i = main->index;
-	if (main->type == 0 && main->sph[i].inter.disc >= 0)
+	if (main->type == 0)
 		ft_light_sph(main, dir);
 	else if (main->type == 1)
 		ft_light_plane(main, dir);
-	else if (main->type == 2 && main->cyl[i].inter.disc >= 0)
+	else if (main->type == 2)
 		ft_light_cyl(main, dir);
-	else if (main->type == 3 && main->cone[i].inter.disc >= 0)
+	else if (main->type == 3)
 		ft_light_cone(main, dir);
 	return (main->type);
 }
@@ -38,7 +43,7 @@ void	ft_for_each_obj(t_main *main, t_vec dir, t_vec pos)
 		ft_cone_intersect(main, dir, pos, i);
 }
 
-int	ft_type_and_color(t_main *main, t_vec dir)
+int		ft_type_and_color(t_main *main, t_vec dir)
 {
 	int color;
 
@@ -58,8 +63,8 @@ void	ft_tracing(t_main *main)
 {
 	t_vec	pix;
 	t_vec	dir;
-	int 	x;
-	int 	y;
+	int		x;
+	int		y;
 	int		color;
 
 	y = -1;
@@ -68,16 +73,15 @@ void	ft_tracing(t_main *main)
 		x = -1;
 		while (++x < WIDTH)
 		{
-			pix.x = (2 * ((x + 0.5) / WIDTH) - 1) * A_RATIO * tan(FOV / 2);
+			pix.x = (2 * ((x + 0.5) / WIDTH) - 1) * RATIO * tan(FOV / 2);
 			pix.y = (1 - 2 * ((y + 0.5) / HEIGHT)) * tan(FOV / 2);
 			pix.z = main->cam.c_position.z - 1;
-			dir = ft_normalize(ft_diff(pix, main->cam.c_position));
-//			ft_mat(main);
+			dir = ft_norm(ft_diff(pix, main->cam.c_position));
 			dir = ft_m_mult_vec(main, dir);
 			ft_for_each_obj(main, dir, main->cam_tmp);
 			ft_compare_all(main);
 			color = ft_type_and_color(main, dir);
-			mlx_pixel_put(main->win.mlx, main->win.win, x, y, color);
+			ft_color_pixel(main, x, y, color);
 		}
 	}
 }
@@ -87,24 +91,17 @@ void	ft_scene(t_main *main)
 	main->mem.sph = 2;
 	main->mem.plane = 2;
 	main->mem.cyl = 1;
-	main->mem.cone = 0;
+	main->mem.cone = 1;
 	main->flag.color = 0;
-	ft_mat(main);
-	main->cam_tmp = ft_m_mult_vec(main, main->cam_tmp);
-	main->sph = (t_sphere *) malloc(sizeof(t_sphere) * main->mem.sph);
-	main->plane = (t_plane*)malloc(sizeof(t_plane) * main->mem.plane);
-	main->cyl = (t_cylinder*)malloc(sizeof(t_cylinder) * main->mem.cyl);
-	main->cone = (t_cone*)malloc(sizeof(t_cone) * main->mem.cone);
+	main->win.marker = 4;
+	main->win.img = mlx_new_image(main->win.mlx, WIDTH, HEIGHT);
+	main->win.data = mlx_get_data_addr(main->win.img, &main->win.bpp,
+									&main->win.size_l, &main->win.endian);
 	ft_check(main);
-	if (main->flag.sph == 0)
-		ft_param_sph(main);
-	if (main->flag.plane == 0)
-		ft_param_plane(main);
-	if (main->flag.cyl == 0)
-		ft_param_cyl(main);
-	if (main->flag.cone == 0)
-		ft_param_cone(main);
 	ft_tracing(main);
-	mlx_key_hook(main->win.win, ft_press_key, &main);
-	mlx_loop(main->win.mlx);
+	mlx_put_image_to_window(main->win.mlx, main->win.win, main->win.img, 0, 0);
+	free(main->sph);
+	free(main->plane);
+	free(main->cyl);
+	free(main->cone);
 }

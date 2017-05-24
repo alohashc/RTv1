@@ -6,7 +6,7 @@
 #    By: alohashc <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2017/03/06 10:48:43 by alohashc          #+#    #+#              #
-#    Updated: 2017/05/14 20:05:16 by alohashc         ###   ########.fr        #
+#    Updated: 2017/05/20 16:52:25 by alohashc         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -23,7 +23,8 @@ SRC = ./main.c \
 	  ./color.c \
 	  ./events.c \
 	  ./compare_t.c \
-	  ./param_obj.c
+	  ./param_obj.c \
+	  ./matrix.c \
 
 O_FILE = $(SRC:.c=.o)
 
